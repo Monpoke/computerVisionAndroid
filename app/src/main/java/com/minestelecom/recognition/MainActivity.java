@@ -21,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -216,9 +217,8 @@ public class MainActivity extends AppCompatActivity
         BitmapDrawable drawable = (BitmapDrawable) img.getDrawable();
         Bitmap bitmap = drawable.getBitmap();
 
-        ServerInteraction serverInteraction = new ServerInteraction(this, bitmap);
-        serverInteractThread = new Thread(serverInteraction);
-        serverInteractThread.run();
+        ServerInteraction serverInteraction = new ServerInteraction(this, bitmap, ((EditText)findViewById(R.id.base64txt)));
+        serverInteraction.run();
     }
 
 }
