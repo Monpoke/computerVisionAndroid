@@ -1,7 +1,7 @@
 package com.minestelecom.recognition;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 import android.widget.EditText;
 
@@ -11,10 +11,11 @@ import java.io.ByteArrayOutputStream;
  * Created by Pierre on 09/01/2018.
  */
 
-class ServerInteraction implements Runnable{
+class ServerInteraction implements Runnable {
     private final MainActivity mainActivity;
     private final Bitmap bitmap;
     private EditText editText;
+    private String URI;
 
     public ServerInteraction(MainActivity mainActivity, Bitmap bitmap, EditText editText) {
 
@@ -26,19 +27,26 @@ class ServerInteraction implements Runnable{
     @Override
     public void run() {
 
-        // get base64 for images
-        //encode image to base64 string
-        String hash = getBitmapBase64();
+        if (URI != null) {
+            new UploadServer().execute(URI);
 
-        editText.setText(hash);
+        } else {
+            System.out.println("null");
+        }
 
 
     }
+
+
 
     private String getBitmapBase64() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageBytes = baos.toByteArray();
         return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+    }
+
+    public void setURI(String URI) {
+        this.URI = URI;
     }
 }

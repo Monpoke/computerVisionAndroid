@@ -1,16 +1,19 @@
 package com.minestelecom.recognition;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Base64;
-import android.util.Log;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -25,10 +28,19 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.karumi.dexter.listener.single.PermissionListener;
+
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.List;
+import java.util.jar.Manifest;
 
 import static com.minestelecom.recognition.Config.REQUEST_IMAGE_CAPTURE;
 import static com.minestelecom.recognition.Config.REQUEST_IMAGE_GALLERY;
@@ -37,6 +49,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private Thread serverInteractThread = null;
+    private Uri uriForImage = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +79,7 @@ public class MainActivity extends AppCompatActivity
         /**
          * ANALYUSE BTN
          */
-        Button analyseBtn = (Button)findViewById(R.id.btnAnalyse);
+        Button analyseBtn = (Button) findViewById(R.id.btnAnalyse);
         analyseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +87,28 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+
+        /**
+         * ASK PERMISSIONS
+         */
+        Dexter.withActivity(this).withPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        Toast.makeText(MainActivity.this, "WP!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+
+                    }
+                })
+                .check();
     }
 
     @Override
@@ -135,6 +170,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
@@ -174,10 +210,10 @@ public class MainActivity extends AppCompatActivity
      */
     private void processImageFromGallery(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            Uri uri = data.getData();
+            uriForImage = data.getData();
 
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uriForImage);
 
                 ImageView imageView = (ImageView) findViewById(R.id.imgLoaded);
                 imageView.setImageBitmap(bitmap);
@@ -210,15 +246,35 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void startAnalyse(){
-        Toast.makeText(getApplicationContext(),"Starting analyse...",Toast.LENGTH_LONG).show();
+    private void startAnalyse() {
+        Toast.makeText(getApplicationContext(), "Starting analyse...", Toast.LENGTH_LONG).show();
 
-        ImageView img = (ImageView) findViewById(R.id.imgLoaded);
-        BitmapDrawable drawable = (BitmapDrawable) img.getDrawable();
-        Bitmap bitmap = drawable.getBitmap();
 
-        ServerInteraction serverInteraction = new ServerInteraction(this, bitmap, ((EditText)findViewById(R.id.base64txt)));
-        serverInteraction.run();
+        // start server activity
+        Intent uploadIntent = new Intent(this, UploadActivity.class);
+        uploadIntent.putExtra("uri", getImagePath(uriForImage));
+        startActivity(uploadIntent);
+
+
+    }
+
+    public String getImagePath(Uri uri) {
+        if (uri == null) return null;
+
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        String document_id = cursor.getString(0);
+        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
+        cursor.close();
+
+        cursor = getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+        cursor.moveToFirst();
+        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        cursor.close();
+
+        return path;
     }
 
 }
