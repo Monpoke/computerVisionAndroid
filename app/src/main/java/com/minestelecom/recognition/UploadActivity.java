@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpResponse;
@@ -45,23 +46,45 @@ public class UploadActivity extends AppCompatActivity {
                 }
 
 
-                System.out.println("Server says: " + result);
-                // if it is filename, call it now...
-                callServerAnalyse(result);
 
+            }
+        }).setCallback(new FutureCallback<String>() {
+            @Override
+            public void onCompleted(Exception e, String result) {
+                if(e==null){
+                    System.out.println("Server says: " + result);
+                    resultView.setText("server said: " + result);
+                    // if it is filename, call it now...
+                    callServerAnalyse(result);
+                }
+                else {
+                    resultView.setText("Not uploaded for this reason... " + e.getMessage());
+                }
             }
         });
     }
 
 
+    /**
+     * Appelle le serveur
+     * @param pathFile
+     */
     private void callServerAnalyse(String pathFile) {
-        // url is the URL to download.
+
+
         // url is the URL to download.
         AsyncHttpClient.getDefaultInstance().execute(Config.SERVER_URL_BASE + "/" + "analyse" + "/" + pathFile, new HttpConnectCallback() {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
                 System.out.println(response.code());
                 System.out.println(response.message());
+
+                if(response.code()==200){
+                    resultView.setText("Résultat de prédiction:" + response.message());
+                } else {
+                    resultView.setText("Une erreur est survenue: " + response.message());
+                }
+
             }
         });
     }
