@@ -48,7 +48,6 @@ import static com.minestelecom.recognition.Config.REQUEST_IMAGE_GALLERY;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private Thread serverInteractThread = null;
     private Uri uriForImage = null;
 
     @Override
@@ -59,12 +58,7 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dispatchTakePictureIntent();
-            }
-        });
+        fab.setOnClickListener(view -> dispatchTakePictureIntent());
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -80,26 +74,25 @@ public class MainActivity extends AppCompatActivity
          * ANALYUSE BTN
          */
         Button analyseBtn = (Button) findViewById(R.id.btnAnalyse);
-        analyseBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startAnalyse();
-            }
-        });
+        analyseBtn.setOnClickListener(v -> startAnalyse());
 
 
         /**
          * ASK PERMISSIONS
          */
+        requestPermissions();
+    }
+
+    private void requestPermissions() {
         Dexter.withActivity(this).withPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 .withListener(new PermissionListener() {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
-                        Toast.makeText(MainActivity.this, "WP!", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onPermissionDenied(PermissionDeniedResponse response) {
+                        Toast.makeText(MainActivity.this, "In order to use this application, you have to accept requested permissions.", Toast.LENGTH_SHORT).show();
 
                     }
 
@@ -195,11 +188,19 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // reset uri image
+        uriForImage=null;
+
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
             processImageFromCamera(resultCode, data);
         } else if (requestCode == REQUEST_IMAGE_GALLERY) {
             processImageFromGallery(resultCode, data);
         }
+
+
+        // to switch analyse button if needed
+        switchAnalyseButton();
+
     }
 
     /**
@@ -225,6 +226,8 @@ public class MainActivity extends AppCompatActivity
         } else {
             Toast.makeText(getApplicationContext(), "An error has occured...", Toast.LENGTH_LONG).show();
         }
+
+
     }
 
     /**
@@ -275,6 +278,20 @@ public class MainActivity extends AppCompatActivity
         cursor.close();
 
         return path;
+    }
+
+
+    /**
+     * To avoid null pointers.
+     */
+    private void switchAnalyseButton() {
+        Button btn = (Button) findViewById(R.id.btnAnalyse);
+
+        if (uriForImage != null) {
+            btn.setVisibility(View.VISIBLE);
+        } else {
+            btn.setVisibility(View.INVISIBLE);
+        }
     }
 
 }

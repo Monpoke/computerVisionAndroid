@@ -8,17 +8,17 @@
 
     <TextView
         android:id="@+id/result"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Résultat"
-        tools:layout_editor_absoluteX="144dp"
-        tools:layout_editor_absoluteY="16dp" />
+        android:layout_width="386dp"
+        android:layout_height="217dp"
+        android:text="Still loading..."
+        android:textAlignment="center"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="172dp" />
 
-    <ProgressBar
-        android:id="@+id/uploadBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="343dp"
-        android:layout_height="15dp"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="186dp" />
+    <Space
+        android:layout_width="10dp"
+        android:layout_height="170dp"
+        tools:layout_editor_absoluteX="174dp"
+        tools:layout_editor_absoluteY="1dp" />
+
 </android.support.constraint.ConstraintLayout>
