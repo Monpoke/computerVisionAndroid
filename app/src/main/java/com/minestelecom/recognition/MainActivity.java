@@ -9,10 +9,12 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -29,6 +31,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
+import com.karumi.dexter.DexterBuilder;
+import com.karumi.dexter.DexterBuilder.MultiPermissionListener;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionDeniedResponse;
@@ -38,7 +42,10 @@ import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.jar.Manifest;
 
@@ -49,6 +56,9 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private Uri uriForImage = null;
+    private  Uri photoURI = null;
+    String mCurrentPhotoPath = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +81,7 @@ public class MainActivity extends AppCompatActivity
 
 
         /**
-         * ANALYUSE BTN
+         * ANALYSE BTN
          */
         Button analyseBtn = (Button) findViewById(R.id.btnAnalyse);
         analyseBtn.setOnClickListener(v -> startAnalyse());
@@ -81,23 +91,28 @@ public class MainActivity extends AppCompatActivity
          * ASK PERMISSIONS
          */
         requestPermissions();
+
+
+        // reset variables
+        resetVariables();
+    }
+
+    private void resetVariables(){
+        mCurrentPhotoPath=null;
+        uriForImage=null;
+        photoURI=null;
     }
 
     private void requestPermissions() {
-        Dexter.withActivity(this).withPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                .withListener(new PermissionListener() {
+        Dexter.withActivity(this).withPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .withListener(new MultiplePermissionsListener() {
                     @Override
-                    public void onPermissionGranted(PermissionGrantedResponse response) {
-                    }
-
-                    @Override
-                    public void onPermissionDenied(PermissionDeniedResponse response) {
-                        Toast.makeText(MainActivity.this, "In order to use this application, you have to accept requested permissions.", Toast.LENGTH_SHORT).show();
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
 
                     }
 
                     @Override
-                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
 
                     }
                 })
@@ -163,10 +178,27 @@ public class MainActivity extends AppCompatActivity
      */
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
+        resetVariables();
+        // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                photoURI = FileProvider.getUriForFile(this,
+                        "com.minestelecom.recognition.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, Config.REQUEST_IMAGE_CAPTURE);
+            }
         }
+
     }
 
     /**
@@ -175,7 +207,7 @@ public class MainActivity extends AppCompatActivity
     private void dispatchGalleryPictureIntent() {
         Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
         getIntent.setType("image/*");
-
+        resetVariables();
         Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         pickIntent.setType("image/*");
 
@@ -212,22 +244,33 @@ public class MainActivity extends AppCompatActivity
     private void processImageFromGallery(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             uriForImage = data.getData();
-
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uriForImage);
-
-                ImageView imageView = (ImageView) findViewById(R.id.imgLoaded);
-                imageView.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(getApplicationContext(), "An error has occured...", Toast.LENGTH_LONG).show();
-
-            }
+            processImageWithURI(uriForImage);
         } else {
-            Toast.makeText(getApplicationContext(), "An error has occured...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
         }
 
 
+    }
+
+    /**
+     * Current image.
+     * @param uri
+     */
+    public void processImageWithURI(Uri uri){
+
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+
+            ImageView imageView = (ImageView) findViewById(R.id.imgLoaded);
+            imageView.setImageBitmap(bitmap);
+
+
+            switchAnalyseButton();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
+
+        }
     }
 
     /**
@@ -238,14 +281,42 @@ public class MainActivity extends AppCompatActivity
      */
     private void processImageFromCamera(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-            ImageView img = (ImageView) findViewById(R.id.imgLoaded);
-            img.setImageBitmap(imageBitmap);
+           if(data!=null) {
+               Bundle extras = data.getExtras();
+               Bitmap imageBitmap = (Bitmap) extras.get("data");
+
+               ImageView img = (ImageView) findViewById(R.id.imgLoaded);
+               img.setImageBitmap(imageBitmap);
+           } else {
+               if(mCurrentPhotoPath!=null) {
+                   uriForImage=Uri.fromFile(new File(mCurrentPhotoPath));
+                   processImageWithURI(uriForImage);
+               }
+               else
+                   Toast.makeText(getApplicationContext(),"Data nul && picture nul",Toast.LENGTH_SHORT).show();
+
+           }
         } else {
-            Toast.makeText(getApplicationContext(), "An error has occured...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
         }
+    }
+
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
 
@@ -255,7 +326,14 @@ public class MainActivity extends AppCompatActivity
 
         // start server activity
         Intent uploadIntent = new Intent(this, UploadActivity.class);
-        uploadIntent.putExtra("uri", getImagePath(uriForImage));
+
+        if(mCurrentPhotoPath!=null){
+            uploadIntent.putExtra("uri", mCurrentPhotoPath);
+        }
+        else {
+            uploadIntent.putExtra("uri", getImagePath(uriForImage));
+        }
+
         startActivity(uploadIntent);
 
 
@@ -285,9 +363,13 @@ public class MainActivity extends AppCompatActivity
      * To avoid null pointers.
      */
     private void switchAnalyseButton() {
+        switchAnalyseButton(false);
+    }
+
+    private void switchAnalyseButton(boolean force) {
         Button btn = (Button) findViewById(R.id.btnAnalyse);
 
-        if (uriForImage != null) {
+        if (force == true || uriForImage != null) {
             btn.setVisibility(View.VISIBLE);
         } else {
             btn.setVisibility(View.INVISIBLE);

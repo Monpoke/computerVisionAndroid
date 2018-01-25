@@ -47,6 +47,7 @@ public class UploadActivity extends AppCompatActivity {
     private void startUpload(String uri) {
         String url = Config.SERVER_URL_BASE + "/" + "upload";
 
+        System.out.println("sending file: "+ uri);
         AsyncHttpPost post = new AsyncHttpPost(url);
         MultipartFormDataBody body = new MultipartFormDataBody();
         body.addFilePart("file", new File(uri));
@@ -55,7 +56,7 @@ public class UploadActivity extends AppCompatActivity {
         post.setTimeout(60000);
 
         // set in progress
-        analyseInProgress=true;
+      //  analyseInProgress=true;
 
         // Lambda expression
 
@@ -105,7 +106,7 @@ public class UploadActivity extends AppCompatActivity {
         String uri = Config.SERVER_URL_BASE + "/" + "analyse" + "/" + pathFile;
         AsyncHttpGet asyncHttpGet = new AsyncHttpGet(uri);
         asyncHttpGet.setTimeout(60000 * 10);
-
+        System.out.println("Calling url: " + uri);
         AsyncHttpClient.getDefaultInstance().executeString(asyncHttpGet, new AsyncHttpClient.StringCallback() {
             @Override
             public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
@@ -133,13 +134,6 @@ public class UploadActivity extends AppCompatActivity {
                 analyseInProgress=false;
 
             }
-        });
-
-
-        // Lambda expression
-        AsyncHttpClient.getDefaultInstance().execute(asyncHttpGet, (ex, response) -> {
-
-
         });
 
 
