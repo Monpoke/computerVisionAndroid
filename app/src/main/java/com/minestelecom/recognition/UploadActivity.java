@@ -2,8 +2,12 @@ package com.minestelecom.recognition;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Base64OutputStream;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,7 +19,12 @@ import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.TimeoutException;
 
 public class UploadActivity extends AppCompatActivity {
@@ -57,7 +66,10 @@ public class UploadActivity extends AppCompatActivity {
         registerButtonsEvents();
 
         Intent intent = getIntent();
-        String uri = intent.getExtras().getString("uri");
+        Uri uri = (Uri) intent.getExtras().get("uri");
+
+
+
         startUpload(uri);
     }
 
@@ -114,13 +126,19 @@ public class UploadActivity extends AppCompatActivity {
         });
     }
 
-    private void startUpload(String uri) {
+    private void startUpload(Uri uri) {
         String url = Config.SERVER_URL_BASE + "/" + "upload";
+
+
+        File file = new File(uri.getPath());
+        if(file.exists()){
+            System.out.println("File existing: " + file.getPath() + " > " + file.isFile());
+        }
 
         System.out.println("sending file: " + uri);
         AsyncHttpPost post = new AsyncHttpPost(url);
         MultipartFormDataBody body = new MultipartFormDataBody();
-        body.addFilePart("file", new File(uri));
+        body.addFilePart("file", file);
         post.setBody(body);
         resultView.setText("Upload in progress to: " + url);
         post.setTimeout(60000);
@@ -167,6 +185,33 @@ public class UploadActivity extends AppCompatActivity {
         });
     }
 
+    // Converting File to Base64.encode String type using Method
+    public String getStringFile(File f) {
+        InputStream inputStream = null;
+        String encodedFile= "", lastVal;
+        try {
+            inputStream = new FileInputStream(f.getAbsolutePath());
+
+            byte[] buffer = new byte[10240];//specify the size to allow
+            int bytesRead;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            Base64OutputStream output64 = new Base64OutputStream(output, Base64.DEFAULT);
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                output64.write(buffer, 0, bytesRead);
+            }
+            output64.close();
+            encodedFile =  output.toString();
+        }
+        catch (FileNotFoundException e1 ) {
+            e1.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        lastVal = encodedFile;
+        return lastVal;
+    }
 
     /**
      * Appelle le serveur

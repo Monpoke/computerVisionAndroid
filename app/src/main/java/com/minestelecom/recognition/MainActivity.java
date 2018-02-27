@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 MainActivity.this.runOnUiThread(() ->
-                        Toast.makeText(getApplicationContext(), "Train request has been sent! -> " + result, Toast.LENGTH_SHORT).show());
+                        Toast.makeText(getApplicationContext(), "Train request has been sent! -> " + result, Toast.LENGTH_LONG).show());
 
             }
         });
@@ -368,6 +368,8 @@ public class MainActivity extends AppCompatActivity
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
+        // remove on exit
+        image.deleteOnExit();
 
         // Save a file: path for use with ACTION_VIEW intents
         mCurrentPhotoPath = image.getAbsolutePath();
@@ -382,13 +384,15 @@ public class MainActivity extends AppCompatActivity
         // start server activity
         Intent uploadIntent = new Intent(this, UploadActivity.class);
 
-        if (mCurrentPhotoPath != null) {
+      /*  if (mCurrentPhotoPath != null) {
             uploadIntent.putExtra("uri", mCurrentPhotoPath);
         }
-        else {
+        else {*/
             System.out.println("image uri : " + uriForImage);
-            uploadIntent.putExtra("uri", uriForImage.toString());
-        }
+            uploadIntent.putExtra("uri", uriForImage);
+
+
+       // }
 
         startActivity(uploadIntent);
 
