@@ -284,6 +284,10 @@ public class MainActivity extends AppCompatActivity
 
            if(data!=null) {
                Bundle extras = data.getExtras();
+               if(extras==null){
+                   return;
+               }
+
                Bitmap imageBitmap = (Bitmap) extras.get("data");
 
                ImageView img = (ImageView) findViewById(R.id.imgLoaded);

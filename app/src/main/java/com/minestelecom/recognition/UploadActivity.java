@@ -1,6 +1,5 @@
 package com.minestelecom.recognition;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,15 +8,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
-import com.koushikdutta.async.http.callback.HttpConnectCallback;
 
 import java.io.File;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeoutException;
 
 public class UploadActivity extends AppCompatActivity {
@@ -25,6 +23,11 @@ public class UploadActivity extends AppCompatActivity {
     private final UploadActivity activity;
     private TextView resultView;
     private boolean analyseInProgress = false;
+    private Button btnReject;
+    private Button btnValidate;
+
+    private String gotClassName = null;
+    private String gotFilename = null;
 
     UploadActivity() {
         this.activity = this;
@@ -35,19 +38,85 @@ public class UploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
 
+
+        gotClassName = null;
+        gotFilename = null;
+
         // FIX
         resultView = (TextView) findViewById(R.id.result);
 
+
+        // BTNS
+        btnValidate = (Button) findViewById(R.id.validateResult);
+        btnReject = (Button) findViewById(R.id.rejectResult);
+
+        // hide
+        btnValidate.setVisibility(View.INVISIBLE);
+        btnReject.setVisibility(View.INVISIBLE);
+
+        registerButtonsEvents();
 
         Intent intent = getIntent();
         String uri = intent.getExtras().getString("uri");
         startUpload(uri);
     }
 
+    /**
+     *
+     */
+    private void registerButtonsEvents() {
+
+
+
+        btnValidate.setOnClickListener(view -> callValidation("yes"));
+        btnReject.setOnClickListener(view -> callValidation("no"));
+
+
+    }
+
+    /**
+     * Call url for validation.
+     *
+     * @param valid
+     * @param filename
+     */
+    private void callValidation(String valid) {
+        String preFilename = gotFilename;
+        String[] split = preFilename.split("_");
+        split[0]= gotClassName;
+
+        String filename = split[0] + "_" + split[1];
+
+        String url = Config.SERVER_URL_BASE + "/" + "validate" + "/" + valid + "/" + filename;
+
+        AsyncHttpGet getRequest = new AsyncHttpGet(url);
+        getRequest.setTimeout(5000);
+
+        AsyncHttpClient.getDefaultInstance().executeString(getRequest, new AsyncHttpClient.StringCallback() {
+            @Override
+            public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
+                if (ex != null) {
+                    ex.printStackTrace();
+                    return;
+                }
+
+                UploadActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Validated! -> " + result, Toast.LENGTH_SHORT).show();
+                    }
+
+
+                });
+
+            }
+        });
+    }
+
     private void startUpload(String uri) {
         String url = Config.SERVER_URL_BASE + "/" + "upload";
 
-        System.out.println("sending file: "+ uri);
+        System.out.println("sending file: " + uri);
         AsyncHttpPost post = new AsyncHttpPost(url);
         MultipartFormDataBody body = new MultipartFormDataBody();
         body.addFilePart("file", new File(uri));
@@ -56,7 +125,7 @@ public class UploadActivity extends AppCompatActivity {
         post.setTimeout(60000);
 
         // set in progress
-      //  analyseInProgress=true;
+        //  analyseInProgress=true;
 
         // Lambda expression
 
@@ -86,6 +155,8 @@ public class UploadActivity extends AppCompatActivity {
                 });
 
                 if (source.code() == 200) {
+
+                    gotFilename = result;
                     // if it is filename, call it now...
                     callServerAnalyse(result);
                 }
@@ -126,12 +197,20 @@ public class UploadActivity extends AppCompatActivity {
                 activity.runOnUiThread(() -> {
                     if (source.code() == 200) {
                         resultView.setText("Is it:\n" + result + "?");
+
+                        // set global
+                        gotClassName = result;
+
+                        // set buttons visibles
+                        btnReject.setVisibility(View.VISIBLE);
+                        btnValidate.setVisibility(View.VISIBLE);
+
                     } else {
                         resultView.setText("We could not analyse... \n" + result);
                     }
                 });
 
-                analyseInProgress=false;
+                analyseInProgress = false;
 
             }
         });
@@ -142,7 +221,7 @@ public class UploadActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(analyseInProgress){
+        if (analyseInProgress) {
             Toast.makeText(activity, "Analyse is still in progress.", Toast.LENGTH_SHORT).show();
             return;
         } else {

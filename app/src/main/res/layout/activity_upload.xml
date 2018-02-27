@@ -6,19 +6,42 @@
     android:layout_height="match_parent"
     tools:context="com.minestelecom.recognition.UploadActivity">
 
-    <TextView
-        android:id="@+id/result"
-        android:layout_width="386dp"
-        android:layout_height="217dp"
-        android:text="Still loading..."
-        android:textAlignment="center"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="172dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Space
-        android:layout_width="10dp"
-        android:layout_height="170dp"
-        tools:layout_editor_absoluteX="174dp"
-        tools:layout_editor_absoluteY="1dp" />
+        <TextView
+            android:id="@+id/result"
+            android:layout_width="match_parent"
+            android:layout_height="217dp"
+            android:text="Still loading..."
+            android:textAlignment="center"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="172dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/validateResult"
+                android:layout_width="wrap_content"
+                android:layout_height="65dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_green_dark"
+                android:text="@string/btnValidate" />
+
+            <Button
+                android:id="@+id/rejectResult"
+                android:layout_width="wrap_content"
+                android:layout_height="61dp"
+                android:layout_weight="1"
+                android:background="@android:color/holo_red_dark"
+                android:text="@string/rejectResult" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
