@@ -245,7 +245,8 @@ public class MainActivity extends AppCompatActivity
 
     private void handleCrop(int resultCode, Intent result) {
         if (resultCode == RESULT_OK) {
-            processImageWithURI(Crop.getOutput(result));
+            uriForImage = Crop.getOutput(result);
+            processImageWithURI(uriForImage);
         } else if (resultCode == Crop.RESULT_ERROR) {
             Toast.makeText(this, Crop.getError(result).getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -259,8 +260,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void processImageFromGallery(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            uriForImage = data.getData();
-            beginCrop(uriForImage);
+            beginCrop(data.getData());
         } else {
             Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
         }
@@ -351,7 +351,8 @@ public class MainActivity extends AppCompatActivity
             uploadIntent.putExtra("uri", mCurrentPhotoPath);
         }
         else {
-            uploadIntent.putExtra("uri", getImagePath(uriForImage));
+            System.out.println("image uri : " + uriForImage);
+            uploadIntent.putExtra("uri", uriForImage.toString());
         }
 
         startActivity(uploadIntent);
