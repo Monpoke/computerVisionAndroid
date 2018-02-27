@@ -1,5 +1,6 @@
 package com.minestelecom.recognition;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,7 +16,6 @@ import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 
 import java.io.File;
-import java.util.StringJoiner;
 import java.util.concurrent.TimeoutException;
 
 public class UploadActivity extends AppCompatActivity {
@@ -78,7 +78,6 @@ public class UploadActivity extends AppCompatActivity {
      * Call url for validation.
      *
      * @param valid
-     * @param filename
      */
     private void callValidation(String valid) {
         String preFilename = gotFilename;
@@ -104,6 +103,8 @@ public class UploadActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(), "Validated! -> " + result, Toast.LENGTH_SHORT).show();
+                        btnReject.setVisibility(View.INVISIBLE);
+                        btnValidate.setVisibility(View.INVISIBLE);
                     }
 
 
@@ -204,6 +205,25 @@ public class UploadActivity extends AppCompatActivity {
                         // set buttons visibles
                         btnReject.setVisibility(View.VISIBLE);
                         btnValidate.setVisibility(View.VISIBLE);
+
+                        /**
+                         * SHOW RESULT
+                         */
+                        ResultShowFragment fragment = new ResultShowFragment();
+                        fragment.show(UploadActivity.this.getFragmentManager(),"UPLOAD");
+
+                        fragment.setGotResult(result);
+                        fragment.setPositive((dialogInterface, i) -> {
+                            UploadActivity.this.callValidation("yes");
+                        });
+
+                        fragment.setNegative((dialogInterface, i) -> {
+                            UploadActivity.this.callValidation("no");
+                        });
+
+
+
+
 
                     } else {
                         resultView.setText("We could not analyse... \n" + result);

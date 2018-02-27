@@ -31,7 +31,7 @@
                 android:layout_height="65dp"
                 android:layout_weight="1"
                 android:background="@android:color/holo_green_dark"
-                android:text="@string/btnValidate" />
+                android:text="@string/validateResult" />
 
             <Button
                 android:id="@+id/rejectResult"

@@ -6,6 +6,7 @@
 
     <string name="action_settings">Settings</string>
     <string name="btn_txt_analyse">Analyse</string>
-    <string name="btnValidate">Validate</string>
+    <string name="validateResult">Validate</string>
     <string name="rejectResult">Reject</string>
+    <string name="predictionResultTitle">Résultat de prédiction</string>
 </resources>
