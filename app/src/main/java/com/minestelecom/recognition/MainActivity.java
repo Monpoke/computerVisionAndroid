@@ -41,6 +41,9 @@ import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpGet;
+import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private Uri uriForImage = null;
-    private  Uri photoURI = null;
+    private Uri photoURI = null;
     String mCurrentPhotoPath = null;
 
 
@@ -98,10 +101,10 @@ public class MainActivity extends AppCompatActivity
         resetVariables();
     }
 
-    private void resetVariables(){
-        mCurrentPhotoPath=null;
-        uriForImage=null;
-        photoURI=null;
+    private void resetVariables() {
+        mCurrentPhotoPath = null;
+        uriForImage = null;
+        photoURI = null;
     }
 
     private void requestPermissions() {
@@ -134,6 +137,8 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+
         return true;
     }
 
@@ -166,11 +171,41 @@ public class MainActivity extends AppCompatActivity
             dispatchGalleryPictureIntent();
         } else if (id == R.id.nav_share) {
 
+        } else if (id == R.id.nav_train) {
+
+            startTraining();
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    /**
+     * Start request for train request.
+     */
+    private void startTraining() {
+
+        String url = Config.SERVER_URL_BASE + "/" + "train";
+
+        AsyncHttpGet getRequest = new AsyncHttpGet(url);
+        getRequest.setTimeout(5000);
+
+        AsyncHttpClient.getDefaultInstance().executeString(getRequest, new AsyncHttpClient.StringCallback() {
+            @Override
+            public void onCompleted(Exception ex, AsyncHttpResponse source, String result) {
+                if (ex != null) {
+                    ex.printStackTrace();
+                    return;
+                }
+
+                MainActivity.this.runOnUiThread(() ->
+                        Toast.makeText(getApplicationContext(), "Train request has been sent! -> " + result, Toast.LENGTH_SHORT).show());
+
+            }
+        });
+
     }
 
 
@@ -222,7 +257,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // reset uri image
-        uriForImage=null;
+        uriForImage = null;
 
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
             processImageFromCamera(resultCode, data);
@@ -270,9 +305,10 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Current image.
+     *
      * @param uri
      */
-    public void processImageWithURI(Uri uri){
+    public void processImageWithURI(Uri uri) {
 
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
@@ -298,25 +334,24 @@ public class MainActivity extends AppCompatActivity
     private void processImageFromCamera(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
 
-           if(data!=null) {
-               Bundle extras = data.getExtras();
-               if(extras==null){
-                   return;
-               }
+            if (data != null) {
+                Bundle extras = data.getExtras();
+                if (extras == null) {
+                    return;
+                }
 
-               Bitmap imageBitmap = (Bitmap) extras.get("data");
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-               ImageView img = (ImageView) findViewById(R.id.imgLoaded);
-               img.setImageBitmap(imageBitmap);
-           } else {
-               if(mCurrentPhotoPath!=null) {
-                   uriForImage=Uri.fromFile(new File(mCurrentPhotoPath));
-                   beginCrop(uriForImage);
-               }
-               else
-                   Toast.makeText(getApplicationContext(),"Data nul && picture nul",Toast.LENGTH_SHORT).show();
+                ImageView img = (ImageView) findViewById(R.id.imgLoaded);
+                img.setImageBitmap(imageBitmap);
+            } else {
+                if (mCurrentPhotoPath != null) {
+                    uriForImage = Uri.fromFile(new File(mCurrentPhotoPath));
+                    beginCrop(uriForImage);
+                } else
+                    Toast.makeText(getApplicationContext(), "Data nul && picture nul", Toast.LENGTH_SHORT).show();
 
-           }
+            }
         } else {
             Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
         }
@@ -347,7 +382,7 @@ public class MainActivity extends AppCompatActivity
         // start server activity
         Intent uploadIntent = new Intent(this, UploadActivity.class);
 
-        if(mCurrentPhotoPath!=null){
+        if (mCurrentPhotoPath != null) {
             uploadIntent.putExtra("uri", mCurrentPhotoPath);
         }
         else {
@@ -364,19 +399,25 @@ public class MainActivity extends AppCompatActivity
         if (uri == null) return null;
 
         Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-        cursor.moveToFirst();
-        String document_id = cursor.getString(0);
-        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
-        cursor.close();
 
-        cursor = getContentResolver().query(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
-        cursor.moveToFirst();
-        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        cursor.close();
+        if (cursor != null) {
 
-        return path;
+            cursor.moveToFirst();
+            String document_id = cursor.getString(0);
+            document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
+            cursor.close();
+
+            cursor = getContentResolver().query(
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+            cursor.moveToFirst();
+            String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+            cursor.close();
+
+            return path;
+        }
+
+        return uri.getEncodedPath();
     }
 
 

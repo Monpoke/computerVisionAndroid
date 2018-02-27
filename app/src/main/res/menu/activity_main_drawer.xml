@@ -16,6 +16,11 @@
     <item android:title="Others">
         <menu>
             <item
+                android:id="@+id/nav_train"
+                android:icon="@drawable/ic_menu_manage"
+                android:title="Train server" />
+
+            <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_manage"
                 android:title="About" />
