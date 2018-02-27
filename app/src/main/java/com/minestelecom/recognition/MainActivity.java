@@ -41,6 +41,7 @@ import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
 import java.io.IOException;
@@ -227,12 +228,27 @@ public class MainActivity extends AppCompatActivity
             processImageFromCamera(resultCode, data);
         } else if (requestCode == REQUEST_IMAGE_GALLERY) {
             processImageFromGallery(resultCode, data);
+        } else if (requestCode == Crop.REQUEST_CROP) {
+            handleCrop(resultCode, data);
         }
 
 
         // to switch analyse button if needed
         switchAnalyseButton();
 
+    }
+
+    private void beginCrop(Uri source) {
+        Uri destination = Uri.fromFile(new File(getCacheDir(), "cropped"));
+        Crop.of(source, destination).asSquare().start(this);
+    }
+
+    private void handleCrop(int resultCode, Intent result) {
+        if (resultCode == RESULT_OK) {
+            processImageWithURI(Crop.getOutput(result));
+        } else if (resultCode == Crop.RESULT_ERROR) {
+            Toast.makeText(this, Crop.getError(result).getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -244,7 +260,7 @@ public class MainActivity extends AppCompatActivity
     private void processImageFromGallery(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             uriForImage = data.getData();
-            processImageWithURI(uriForImage);
+            beginCrop(uriForImage);
         } else {
             Toast.makeText(getApplicationContext(), "An error has occurred...", Toast.LENGTH_LONG).show();
         }
@@ -295,7 +311,7 @@ public class MainActivity extends AppCompatActivity
            } else {
                if(mCurrentPhotoPath!=null) {
                    uriForImage=Uri.fromFile(new File(mCurrentPhotoPath));
-                   processImageWithURI(uriForImage);
+                   beginCrop(uriForImage);
                }
                else
                    Toast.makeText(getApplicationContext(),"Data nul && picture nul",Toast.LENGTH_SHORT).show();
