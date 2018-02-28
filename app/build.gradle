@@ -21,6 +21,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    repositories {
+        maven { url "https://maven.google.com" }
+    }
 }
 
 dependencies {
@@ -37,4 +41,14 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.soundcloud.android:android-crop:1.0.1@aar'
 
+    compile('io.socket:socket.io-client:1.0.0') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
+
+    compile 'com.google.firebase:firebase-messaging:11.8.0'
+
 }
+
+
+apply plugin: 'com.google.gms.google-services'

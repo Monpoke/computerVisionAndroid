@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "952184043108",
+    "firebase_url": "https://computervision-4f52d.firebaseio.com",
+    "project_id": "computervision-4f52d",
+    "storage_bucket": "computervision-4f52d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:952184043108:android:7897260fd02630bc",
+        "android_client_info": {
+          "package_name": "com.minestelecom.recognition"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "952184043108-73nqhtldqtos84i90qshsuj5hdqopnsn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.minestelecom.recognition",
+            "certificate_hash": "116923ff9b75562b1cd3a1512d84aa865c568412"
+          }
+        },
+        {
+          "client_id": "952184043108-f5q57ns60bcvqqnp195515ipk8b8fdfh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUzSFg5ybQBYtkVnCFFqBkUpMajLRmQ6E"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "952184043108-f5q57ns60bcvqqnp195515ipk8b8fdfh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

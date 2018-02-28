@@ -38,7 +38,7 @@ public class UploadActivity extends AppCompatActivity {
     private String gotClassName = null;
     private String gotFilename = null;
 
-    UploadActivity() {
+   public UploadActivity() {
         this.activity = this;
     }
 

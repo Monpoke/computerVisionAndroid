@@ -1,11 +1,13 @@
 package com.minestelecom.recognition;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -96,9 +98,17 @@ public class MainActivity extends AppCompatActivity
          */
         requestPermissions();
 
+        // register messaging
+        fgmMessaging();
 
         // reset variables
         resetVariables();
+    }
+
+    private void fgmMessaging() {
+
+
+
     }
 
     private void resetVariables() {
