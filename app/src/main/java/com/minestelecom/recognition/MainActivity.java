@@ -94,8 +94,8 @@ public class MainActivity extends AppCompatActivity
      * Ask server for a security token.
      */
     private void registerServerAndFCM() {
-
-        ServerRegistration.sendServerToken(FirebaseInstanceId.getInstance().getToken());
+        Config.FCM_TOKEN=FirebaseInstanceId.getInstance().getToken();
+        ServerRegistration.sendServerToken(Config.FCM_TOKEN);
 
     }
 

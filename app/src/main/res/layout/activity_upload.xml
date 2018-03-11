@@ -9,38 +9,25 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp">
 
         <TextView
             android:id="@+id/result"
             android:layout_width="match_parent"
             android:layout_height="217dp"
             android:text="Still loading..."
-            android:textAlignment="center"
+            android:textAlignment="viewStart"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             tools:layout_editor_absoluteX="0dp"
             tools:layout_editor_absoluteY="172dp" />
 
-        <LinearLayout
+        <ProgressBar
+            android:id="@+id/resultProgress"
+            style="?android:attr/progressBarStyle"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/validateResult"
-                android:layout_width="wrap_content"
-                android:layout_height="65dp"
-                android:layout_weight="1"
-                android:background="@android:color/holo_green_dark"
-                android:text="@string/validateResult" />
-
-            <Button
-                android:id="@+id/rejectResult"
-                android:layout_width="wrap_content"
-                android:layout_height="61dp"
-                android:layout_weight="1"
-                android:background="@android:color/holo_red_dark"
-                android:text="@string/rejectResult" />
-        </LinearLayout>
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

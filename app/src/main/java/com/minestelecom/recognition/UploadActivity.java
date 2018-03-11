@@ -3,6 +3,8 @@ package com.minestelecom.recognition;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -10,6 +12,7 @@ import android.util.Base64OutputStream;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +21,7 @@ import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.minestelecom.recognition.messaging.MyMessagingService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,13 +36,16 @@ public class UploadActivity extends AppCompatActivity {
     private final UploadActivity activity;
     private TextView resultView;
     private boolean analyseInProgress = false;
-    private Button btnReject;
-    private Button btnValidate;
 
     private String gotClassName = null;
     private String gotFilename = null;
 
-   public UploadActivity() {
+
+    // for communications services
+    MyResultReceiver resultReceiver;
+
+
+    public UploadActivity() {
         this.activity = this;
     }
 
@@ -46,6 +53,10 @@ public class UploadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
+
+        // set receiver to messaging service
+        resultReceiver = new MyResultReceiver(null);
+        MyMessagingService.setResultReceiver(resultReceiver);
 
 
         gotClassName = null;
@@ -55,36 +66,16 @@ public class UploadActivity extends AppCompatActivity {
         resultView = (TextView) findViewById(R.id.result);
 
 
-        // BTNS
-        btnValidate = (Button) findViewById(R.id.validateResult);
-        btnReject = (Button) findViewById(R.id.rejectResult);
 
-        // hide
-        btnValidate.setVisibility(View.INVISIBLE);
-        btnReject.setVisibility(View.INVISIBLE);
-
-        registerButtonsEvents();
+        //registerButtonsEvents();
 
         Intent intent = getIntent();
         Uri uri = (Uri) intent.getExtras().get("uri");
 
 
-
         startUpload(uri);
     }
 
-    /**
-     *
-     */
-    private void registerButtonsEvents() {
-
-
-
-        btnValidate.setOnClickListener(view -> callValidation("yes"));
-        btnReject.setOnClickListener(view -> callValidation("no"));
-
-
-    }
 
     /**
      * Call url for validation.
@@ -94,7 +85,7 @@ public class UploadActivity extends AppCompatActivity {
     private void callValidation(String valid) {
         String preFilename = gotFilename;
         String[] split = preFilename.split("_");
-        split[0]= gotClassName;
+        split[0] = gotClassName;
 
         String filename = split[0] + "_" + split[1];
 
@@ -115,8 +106,6 @@ public class UploadActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(), "Validated! -> " + result, Toast.LENGTH_SHORT).show();
-                        btnReject.setVisibility(View.INVISIBLE);
-                        btnValidate.setVisibility(View.INVISIBLE);
                     }
 
 
@@ -131,7 +120,7 @@ public class UploadActivity extends AppCompatActivity {
 
 
         File file = new File(uri.getPath());
-        if(file.exists()){
+        if (file.exists()) {
             System.out.println("File existing: " + file.getPath() + " > " + file.isFile());
         }
 
@@ -185,33 +174,6 @@ public class UploadActivity extends AppCompatActivity {
         });
     }
 
-    // Converting File to Base64.encode String type using Method
-    public String getStringFile(File f) {
-        InputStream inputStream = null;
-        String encodedFile= "", lastVal;
-        try {
-            inputStream = new FileInputStream(f.getAbsolutePath());
-
-            byte[] buffer = new byte[10240];//specify the size to allow
-            int bytesRead;
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            Base64OutputStream output64 = new Base64OutputStream(output, Base64.DEFAULT);
-
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                output64.write(buffer, 0, bytesRead);
-            }
-            output64.close();
-            encodedFile =  output.toString();
-        }
-        catch (FileNotFoundException e1 ) {
-            e1.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        lastVal = encodedFile;
-        return lastVal;
-    }
 
     /**
      * Appelle le serveur
@@ -220,7 +182,13 @@ public class UploadActivity extends AppCompatActivity {
      */
     private void callServerAnalyse(String pathFile) {
 
-        String uri = Config.SERVER_URL_BASE + "/" + "analyse" + "/" + pathFile;
+        /**
+         * Gives TOKEN IN URL
+         */
+        String uri = Config.SERVER_URL_BASE + "/" + "analyse" + "/" + pathFile
+                + "?fcm=" + Config.FCM_TOKEN + "&token=" + Config.SERVER_TOKEN;
+
+
         AsyncHttpGet asyncHttpGet = new AsyncHttpGet(uri);
         asyncHttpGet.setTimeout(60000 * 10);
         System.out.println("Calling url: " + uri);
@@ -239,46 +207,14 @@ public class UploadActivity extends AppCompatActivity {
                 System.out.println(source.code());
                 System.out.println(source.message());
 
-
-                activity.runOnUiThread(() -> {
-                    if (source.code() == 200) {
-                        resultView.setText("Is it:\n" + result + "?");
-
-                        // set global
-                        gotClassName = result;
-
-                        // set buttons visibles
-                        btnReject.setVisibility(View.VISIBLE);
-                        btnValidate.setVisibility(View.VISIBLE);
-
-                        /**
-                         * SHOW RESULT
-                         */
-                        ResultShowFragment fragment = new ResultShowFragment();
-                        fragment.show(UploadActivity.this.getFragmentManager(),"UPLOAD");
-
-                        fragment.setGotResult(result);
-                        fragment.setPositive((dialogInterface, i) -> {
-                            UploadActivity.this.callValidation("yes");
-                        });
-
-                        fragment.setNegative((dialogInterface, i) -> {
-                            UploadActivity.this.callValidation("no");
-                        });
-
-
-
-
-
-                    } else {
-                        resultView.setText("We could not analyse... \n" + result);
-                    }
-                });
-
                 analyseInProgress = false;
 
             }
         });
+
+    }
+
+    public static void ff() {
 
 
     }
@@ -293,4 +229,72 @@ public class UploadActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
+
+    /**
+     * This has to be called on prediction result.
+     *
+     * @param predictionResult
+     */
+    protected void onPredictionReceived(String predictionResult) {
+        activity.runOnUiThread(() -> {
+            resultView.setText("");
+            resultView.setVisibility(View.INVISIBLE);
+            findViewById(R.id.resultProgress).setVisibility(View.GONE);
+
+            // set global
+            gotClassName = predictionResult;
+
+            // set buttons visibles
+       //     btnReject.setVisibility(View.VISIBLE);
+         //   btnValidate.setVisibility(View.VISIBLE);
+
+            /**
+             * SHOW RESULT
+             */
+            ResultShowFragment fragment = new ResultShowFragment();
+            fragment.setCancelable(false);
+            fragment.show(UploadActivity.this.getFragmentManager(), "UPLOAD");
+
+            fragment.setGotResult(predictionResult);
+            fragment.setPositive((dialogInterface, i) -> {
+                UploadActivity.this.callValidation("yes");
+
+                UploadActivity.this.runOnUiThread(() -> UploadActivity.this.finish());
+            });
+
+            fragment.setNegative((dialogInterface, i) -> {
+                UploadActivity.this.callValidation("no");
+
+                UploadActivity.this.runOnUiThread(() -> UploadActivity.this.finish());
+            });
+
+        });
+    }
+
+
+
+
+    /**
+     * HANDLE RETURN RESULTS FROM PREDICTIONS
+     */
+    private class MyResultReceiver extends ResultReceiver {
+        public MyResultReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+
+            if (resultCode == 1) {
+
+                String prediction = resultData.getString("prediction");
+                UploadActivity.this.onPredictionReceived(prediction);
+
+            }
+
+        }
+    }
+
+
 }
