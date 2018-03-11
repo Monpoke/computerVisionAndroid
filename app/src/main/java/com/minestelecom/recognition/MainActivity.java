@@ -1,23 +1,14 @@
 package com.minestelecom.recognition;
 
-import android.app.Activity;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -28,24 +19,19 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.karumi.dexter.Dexter;
-import com.karumi.dexter.DexterBuilder;
-import com.karumi.dexter.DexterBuilder.MultiPermissionListener;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.multi.BaseMultiplePermissionsListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.karumi.dexter.listener.single.PermissionListener;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpResponse;
+import com.minestelecom.recognition.messaging.ServerRegistration;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
@@ -53,7 +39,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.jar.Manifest;
 
 import static com.minestelecom.recognition.Config.REQUEST_IMAGE_CAPTURE;
 import static com.minestelecom.recognition.Config.REQUEST_IMAGE_GALLERY;
@@ -99,17 +84,22 @@ public class MainActivity extends AppCompatActivity
         requestPermissions();
 
         // register messaging
-        fgmMessaging();
+        registerServerAndFCM();
 
         // reset variables
         resetVariables();
     }
 
-    private void fgmMessaging() {
+    /**
+     * Ask server for a security token.
+     */
+    private void registerServerAndFCM() {
 
-
+        ServerRegistration.sendServerToken(FirebaseInstanceId.getInstance().getToken());
 
     }
+
+
 
     private void resetVariables() {
         mCurrentPhotoPath = null;
