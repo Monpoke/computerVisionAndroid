@@ -1,0 +1,24 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="use_v1"
+        android:title="@string/pref_use_v1" />
+
+    <ListPreference
+        android:entries="@array/list_preferences_server_use"
+        android:entryValues="@array/list_preferences_server_use"
+        android:key="server_url"
+        android:title="@string/pref_server"
+        android:defaultValue="0"
+        android:summary="@string/pref_server"
+        />
+
+
+    <EditTextPreference
+        android:summary="@string/prefs_custom_server"
+        android:title="@string/prefs_custom_server"
+        android:key="custom_server_url"
+        />
+</PreferenceScreen>

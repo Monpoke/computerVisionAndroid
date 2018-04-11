@@ -16,3 +16,4 @@ public class Config {
     public static String SERVER_TOKEN = null;
 
 }
+

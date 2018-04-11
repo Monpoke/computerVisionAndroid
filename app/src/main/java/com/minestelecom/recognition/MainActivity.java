@@ -98,13 +98,14 @@ public class MainActivity extends AppCompatActivity
      * Ask server for a security token.
      */
     private void registerServerAndFCM() {
-        Config.FCM_TOKEN=FirebaseInstanceId.getInstance().getToken();
+        Config.FCM_TOKEN = FirebaseInstanceId.getInstance().getToken();
         ServerRegistration.sendServerToken(Config.FCM_TOKEN);
 
     }
 
-
-
+    /**
+     * Resets all variables.
+     */
     private void resetVariables() {
         mCurrentPhotoPath = null;
         uriForImage = null;
@@ -155,6 +156,8 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent settings = new Intent(this, SettingsActivity.class);
+            startActivity(settings);
             return true;
         }
 
@@ -381,6 +384,9 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /**
+     * Sends the image to new activity, which handles the analyse.
+     */
     private void startAnalyse() {
         Toast.makeText(getApplicationContext(), "Starting analyse...", Toast.LENGTH_LONG).show();
 
@@ -388,18 +394,10 @@ public class MainActivity extends AppCompatActivity
         // start server activity
         Intent uploadIntent = new Intent(this, UploadActivity.class);
 
-      /*  if (mCurrentPhotoPath != null) {
-            uploadIntent.putExtra("uri", mCurrentPhotoPath);
-        }
-        else {*/
-            System.out.println("image uri : " + uriForImage);
-            uploadIntent.putExtra("uri", uriForImage);
-
-
-       // }
+        System.out.println("image uri : " + uriForImage);
+        uploadIntent.putExtra("uri", uriForImage);
 
         startActivity(uploadIntent);
-
 
     }
 
@@ -428,11 +426,17 @@ public class MainActivity extends AppCompatActivity
         return uri.getEncodedPath();
     }
 
+    /**
+     * This method allow to remove the cache.
+     *
+     * @param context
+     */
     public static void deleteCache(Context context) {
         try {
             File dir = context.getCacheDir();
             deleteDir(dir);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
     }
 
     public static boolean deleteDir(File dir) {
@@ -445,7 +449,7 @@ public class MainActivity extends AppCompatActivity
                 }
             }
             return dir.delete();
-        } else if(dir!= null && dir.isFile()) {
+        } else if (dir != null && dir.isFile()) {
             return dir.delete();
         } else {
             return false;

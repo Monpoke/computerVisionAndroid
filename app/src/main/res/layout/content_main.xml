@@ -24,7 +24,7 @@
             android:layout_marginTop="14dp"
             android:layout_row="0"
             android:layout_weight="1"
-            app:srcCompat="@drawable/side_nav_bar"
+            app:srcCompat="@drawable/noimage"
             tools:layout_editor_absoluteX="0dp"
             tools:layout_editor_absoluteY="0dp" />
 
