@@ -1,18 +1,15 @@
 package com.minestelecom.recognition;
 
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Base64;
-import android.util.Base64OutputStream;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,12 +20,7 @@ import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.minestelecom.recognition.messaging.MyMessagingService;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.TimeoutException;
 
 public class UploadActivity extends AppCompatActivity {
@@ -43,6 +35,8 @@ public class UploadActivity extends AppCompatActivity {
 
     // for communications services
     MyResultReceiver resultReceiver;
+    private String hostToAPI;
+    private String hostExtraParameters;
 
 
     public UploadActivity() {
@@ -53,6 +47,8 @@ public class UploadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
+
+        loadDefaultURLFromPrefs();
 
         // set receiver to messaging service
         resultReceiver = new MyResultReceiver(null);
@@ -76,6 +72,41 @@ public class UploadActivity extends AppCompatActivity {
         startUpload(uri);
     }
 
+    /**
+     * Loads all server default from prefs.s
+     */
+    private void loadDefaultURLFromPrefs() {
+
+        Resources resources = getResources();
+        String[] serverList = resources.getStringArray(R.array.list_preferences_server_use);
+
+        String hostdefault = serverList[0];
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        hostToAPI =  prefs.getString("server_url",hostdefault);
+
+        // use default host
+        if(hostToAPI.toLowerCase().equals("custom")){
+            hostToAPI = prefs.getString("custom_server_url",hostdefault);
+        }
+
+
+        hostToAPI += "/projet/webapi/myresource";
+
+        // extra host
+        hostExtraParameters = "";
+
+        // if have to use v1, so tell server use local method
+        if(true == prefs.getBoolean("use_v1",false)){
+            hostExtraParameters="v1=true";
+        } else {
+
+            hostExtraParameters+="references="+prefs.getString("references_server","local").toLowerCase();
+            hostExtraParameters+="&custom_ref="+prefs.getString("custom_references_server","").toLowerCase();
+
+        }
+    }
+
 
     /**
      * Call url for validation.
@@ -89,7 +120,7 @@ public class UploadActivity extends AppCompatActivity {
 
         String filename = split[0] + "_" + split[1];
 
-        String url = Config.SERVER_URL_BASE + "/" + "validate" + "/" + valid + "/" + filename;
+        String url = hostToAPI + "/" + "validate" + "/" + valid + "/" + filename+"?"+hostExtraParameters;
 
         AsyncHttpGet getRequest = new AsyncHttpGet(url);
         getRequest.setTimeout(5000);
@@ -116,7 +147,7 @@ public class UploadActivity extends AppCompatActivity {
     }
 
     private void startUpload(Uri uri) {
-        String url = Config.SERVER_URL_BASE + "/" + "upload";
+        String url = hostToAPI + "/" + "upload"+"?"+hostExtraParameters;
 
 
         File file = new File(uri.getPath());
@@ -185,8 +216,9 @@ public class UploadActivity extends AppCompatActivity {
         /**
          * Gives TOKEN IN URL
          */
-        String uri = Config.SERVER_URL_BASE + "/" + "analyse" + "/" + pathFile
-                + "?fcm=" + Config.FCM_TOKEN + "&token=" + Config.SERVER_TOKEN;
+
+        String uri = hostToAPI + "/" + "analyse" + "/" + pathFile
+                + "?fcm=" + Config.FCM_TOKEN + "&token=" + Config.SERVER_TOKEN + "&" + hostExtraParameters;
 
 
         AsyncHttpGet asyncHttpGet = new AsyncHttpGet(uri);
@@ -211,11 +243,6 @@ public class UploadActivity extends AppCompatActivity {
 
             }
         });
-
-    }
-
-    public static void ff() {
-
 
     }
 

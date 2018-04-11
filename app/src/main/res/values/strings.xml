@@ -69,7 +69,14 @@
         <item>3</item>
     </string-array>
 
+    <string-array name="list_preferences_references_use">
+        <item>LOCAL</item>
+        <item>PROF</item>
+        <item>Custom</item>
+    </string-array>
+
     <string-array name="list_preferences_server_use">
+        <item>http://192.168.137.1:8080</item>
         <item>http://central.pierrebourgeois.fr:8090</item>
         <item>Custom</item>
     </string-array>
@@ -90,4 +97,7 @@
     <string name="pref_use_v1">Tell server use local analyse</string>
     <string name="prefs_custom_server">Custom server host</string>
     <string name="pref_server">Source server</string>
+    <string name="pref_header_references">References server</string>
+    <string name="prefs_references_custom">Custom references server</string>
+    <string name="pref_server_references">References server</string>
 </resources>
