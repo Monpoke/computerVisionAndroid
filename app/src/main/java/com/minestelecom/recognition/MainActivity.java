@@ -210,7 +210,11 @@ public class MainActivity extends AppCompatActivity
 
         String url = hostToAPI + Config.API_POINT + "/" + "train";
 
-        Log.i("hosttrain","sending to " + url);
+        // set url with preferences
+        url += "?refs_server=" + prefs.getString("references_server", "local") + "&custom_refs_server=" + prefs.getString("custom_references_server", "");
+
+
+        Log.i("hosttrain", "sending to " + url);
 
         AsyncHttpGet getRequest = new AsyncHttpGet(url);
         getRequest.setTimeout(5000);
