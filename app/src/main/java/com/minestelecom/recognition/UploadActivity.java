@@ -91,7 +91,7 @@ public class UploadActivity extends AppCompatActivity {
         }
 
 
-        hostToAPI += "/projet/webapi/myresource";
+        hostToAPI += Config.API_POINT;
 
         // extra host
         hostExtraParameters = "";

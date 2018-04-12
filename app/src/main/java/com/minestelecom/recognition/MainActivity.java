@@ -3,6 +3,7 @@ package com.minestelecom.recognition;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -196,7 +198,19 @@ public class MainActivity extends AppCompatActivity
      */
     private void startTraining() {
 
-        String url = Config.SERVER_URL_BASE + "/" + "train";
+        Resources resources = getResources();
+        String[] serverList = resources.getStringArray(R.array.list_preferences_server_use);
+
+
+        // get default host
+        String hostdefault = serverList[0];
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String hostToAPI = prefs.getString("server_url", hostdefault);
+
+        String url = hostToAPI + Config.API_POINT + "/" + "train";
+
+        Log.i("hosttrain","sending to " + url);
 
         AsyncHttpGet getRequest = new AsyncHttpGet(url);
         getRequest.setTimeout(5000);
